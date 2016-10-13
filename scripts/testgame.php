@@ -1,7 +1,7 @@
 <?php
-
+    // TODO - Need to add interface documentation headers to classes and functions.
     $game = new board();
-
+    
     //A class to describe and represent the full xfour board.
     class board {
         //private $col_array = array();
@@ -72,22 +72,27 @@
             $player1 = new player($player_pieces[0], $player_types[0]);
             $player2 = new player($player_pieces[1], $player_types[1]);
 
-            $active_player   = ($player->getPiece() === 'x') ? $player1 : $player2;
+            $active_player   = ($player1->getPiece() === 'x') ? $player1 : $player2;
             $inactive_player = ($active_player === $player1) ? $player2 : $player1;
 
 	    // The core game loop - players taking turns adding pieces.
             $gameWinner = FALSE;
 
             while (! $gameWinner) {
+                //First, draw the board.
+                $this->drawBoard();
+
                 // Active player gets prompted to take a move. 
-                $this->promptMove($active_player);
+//var_dump($active_player);
+                $move = $this->promptMove($active_player);
 
                 // Then the move is executed.
-                
+                $this->addPiece($active_player, $move);
+
                 // Then the win condition is checked.
                 $gameWinner = $this->checkForWin();
 
-                // If the game is not over, the inactive player becomes active.
+                // If the game is not over, the inactive player becomes active and we repeat.
 		$tmp_player      = $active_player;
                 $active_player   = $inactive_player;
                 $inactive_player = $tmp_player;
@@ -98,22 +103,29 @@
         function promptMove($player) {
             // Check if player is human or ai. If human, prompt for a move. If ai, call the 
             // calcMove function, passing in the difficulty. Moves are returned from the 
-            // players as a single character string ('a'-'g') representign a column.
-            if ($player->getType === 'human') {
+            // players as a single character string ('a'-'g') representing a column.
+            if ($player->getType() === 'human') {
+                $move_letter = ''; 
+                while (! $move_letter) { 
+                    $move_letter = readline("Input column letter for next move. (a, b, c ... f) ");
 
+                    if (! in_array($move_letter, array('a','b','c','d','e','f','g'))) {
+                        echo "\nInvalid move. Please input a valid column letter.\n"; 
+                        $move_letter = '';   
+                    }
+                }
             } else {
-
+//                $move_letter = player->calcMove(); // TODO
             }
 
 	    // Map input to relevant column use ascii characters and 'ord' function (dep?)
+            $move_col = ord($move_letter) - 97; //Ascii char 'a' is 97; $move_col is 0 for 'a'
 
             // Return mapped input.
-            // Add a piece. Calls to the relevant column's function. Stores the result in the
-            // gameRecord variable if successful.
+            return $move_col;
         }
 
         function addPiece($player, $col_num) {
-            //TODO temporarily using x and o to represent players.
             $outcome = $this->col_array[$col_num]->addPiece($player);
             if (! $outcome) {
 	        return FALSE;
@@ -229,6 +241,7 @@
 
         function __construct($piece,$type) {
             $this->piece = $piece;
+            $this->ptype = $type;
         }
 
 	function getPiece(){
