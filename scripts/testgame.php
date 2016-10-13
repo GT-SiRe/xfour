@@ -59,12 +59,12 @@
 	        $numPlayers  = readline("How many players? (1, 2) ");
 
                 if ($numPlayers == '1'){
-                    $numPlayers = 1;
+                    $player_types = array('human','ai');
                 } elseif ($numPlayers == '2') { 
-                    $numPlayers = 2;
+                    $player_types = array('human','human');
                 } elseif ($numPlayers == '0') {
                     echo "i\"An interesting game. The only winning move is not to play.\" Or in this case, go first.\n";
-                    $numPlayers = 0;
+                    $player_types = array('ai','ai');
                 } else {
                     echo "Invalid number of players selected. Try again.\n";
                     unset($numPlayers);
@@ -73,12 +73,12 @@
 
             $whoGoesFirst = FALSE;
             while (! $whoGoesFirst) {
-		$whoGoesFirst = readline("You are player 1. Who goes first? (1,2) ");
+		$whoGoesFirst = readline("Current user is player 1. Which player goes first? (1,2) ");
                
                 if ($whoGoesFirst == '1') {
-                    $whoGoesFirst = 1;
+                    $player_pieces = array('x', 'o');
                 } elseif ($whoGoesFirst == '2') {
-                    $whoGoesFirst = 2;
+                    $player_pieces = array('o', 'x');
                 } else {
                     echo "Invalid input. Try again.\n";
                     unset($whoGoesFirst);
@@ -98,12 +98,8 @@
             }
 
 	    // numPlayers whoGoesFirst difficulty
-            if ($numPlayers == 0) {
-                $player1 = new player('x', 'ai'); 
-                $player2 = new player('o', 'ai');
-            } elseif ($numPlayers == 1 && $whoGoesFirst) {
-                $player1 = new player('x','');
-            } 
+            $player1 = new player($player_pieces[0], $player_types[0]); 
+            $player2 = new player($player_pieces[1], $player_types[1]);
 	    
             var_dump('end');
             
