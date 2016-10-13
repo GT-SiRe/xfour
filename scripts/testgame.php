@@ -17,35 +17,6 @@
             }
 
 	    //Debug Setup
-            
-            $this->player1 = new player('x', 'human');
-            $this->player2 = new player('o', 'ai');
-        /*   //$this->drawBoardSideways();
-            $this->addPiece($this->player1, 0);
-            $this->addPiece($this->player2, 0);
-            $this->addPiece($this->player1, 1);
-            $this->addPiece($this->player2, 3);
-            //$this->drawBoardSideways();
-            $this->addPiece($this->player1, 0);
-            $this->addPiece($this->player1, 0);
-            $this->addPiece($this->player1, 0);
-            $this->addPiece($this->player1, 0);
-            $this->addPiece($this->player1, 0);
-            $this->addPiece($this->player1, 0);*/
-
-	    // 
-            $this->addPiece($this->player1, 6);
-            $this->addPiece($this->player2, 3);
-            $this->addPiece($this->player1, 3);
-            $this->addPiece($this->player2, 5);
-
-//            $this->addPiece($this->player1, 6);
-  //          $this->addPiece($this->player1, 6);
-    //        $this->addPiece($this->player1, 6);
-
-
-//            $this->drawBoard();
-
             $this->setup();
         }
 
@@ -58,11 +29,11 @@
             while (! $numPlayers) {
 	        $numPlayers  = readline("How many players? (1, 2) ");
 
-                if ($numPlayers == '1'){
+                if ($numPlayers === '1'){
                     $player_types = array('human','ai');
-                } elseif ($numPlayers == '2') { 
+                } elseif ($numPlayers === '2') { 
                     $player_types = array('human','human');
-                } elseif ($numPlayers == '0') {
+                } elseif ($numPlayers === '0') {
                     echo "i\"An interesting game. The only winning move is not to play.\" Or in this case, go first.\n";
                     $player_types = array('ai','ai');
                 } else {
@@ -75,9 +46,9 @@
             while (! $whoGoesFirst) {
 		$whoGoesFirst = readline("Current user is player 1. Which player goes first? (1,2) ");
                
-                if ($whoGoesFirst == '1') {
+                if ($whoGoesFirst === '1') {
                     $player_pieces = array('x', 'o');
-                } elseif ($whoGoesFirst == '2') {
+                } elseif ($whoGoesFirst === '2') {
                     $player_pieces = array('o', 'x');
                 } else {
                     echo "Invalid input. Try again.\n";
@@ -85,39 +56,70 @@
                 }               
 	    }
 
-            if ($numPlayers == 1 || $numPlayers == 0){
+            if ($numPlayers === 1 || $numPlayers === 0){
 	        $difficulty = FALSE;
                 while (! $difficulty) {
                     $difficulty = readline("Enter AI difficulty (Normal, Hard) ");
                  
-                    if (! in_array($difficulty, array('Normal','Hard' ))){
+                    if (! in_array($difficulty, array('Normal','Hard'))){
                         echo "Invalid input. Try again.";
                         unset($difficulty);
                     }
                 }
             }
 
-	    // numPlayers whoGoesFirst difficulty
-            $player1 = new player($player_pieces[0], $player_types[0]); 
+	    // Set up the players.
+            $player1 = new player($player_pieces[0], $player_types[0]);
             $player2 = new player($player_pieces[1], $player_types[1]);
-	    
-            var_dump('end');
-            
+
+            $active_player   = ($player->getPiece() === 'x') ? $player1 : $player2;
+            $inactive_player = ($active_player === $player1) ? $player2 : $player1;
+
+	    // The core game loop - players taking turns adding pieces.
+            $gameWinner = FALSE;
+
+            while (! $gameWinner) {
+                // Active player gets prompted to take a move. 
+                $this->promptMove($active_player);
+
+                // Then the move is executed.
+                
+                // Then the win condition is checked.
+                $gameWinner = $this->checkForWin();
+
+                // If the game is not over, the inactive player becomes active.
+		$tmp_player      = $active_player;
+                $active_player   = $inactive_player;
+                $inactive_player = $tmp_player;
+            } 
         }
 
         // Ask player for their move and process input into game actions.
-        function promptMove($player) {}
-            // Check if player is human or ai
+        function promptMove($player) {
+            // Check if player is human or ai. If human, prompt for a move. If ai, call the 
+            // calcMove function, passing in the difficulty. Moves are returned from the 
+            // players as a single character string ('a'-'g') representign a column.
+            if ($player->getType === 'human') {
 
-        // Add a piece. Calls to the relevant column's function. Stores the result in the
-        // gameRecord variable if successful.
+            } else {
+
+            }
+
+	    // Map input to relevant column use ascii characters and 'ord' function (dep?)
+
+            // Return mapped input.
+            // Add a piece. Calls to the relevant column's function. Stores the result in the
+            // gameRecord variable if successful.
+        }
+
         function addPiece($player, $col_num) {
             //TODO temporarily using x and o to represent players.
             $outcome = $this->col_array[$col_num]->addPiece($player);
             if (! $outcome) {
-
-            }
-            
+	        return FALSE;
+            } else {
+                return TRUE;
+            } 
         }
 
         // A function to see if either player has won the game.
@@ -157,9 +159,6 @@
             echo "  e " . implode(' ', $this->col_array[4]->getColValues()) . "\n";
             echo "  f " . implode(' ', $this->col_array[5]->getColValues()) . "\n";
             echo "  g " . implode(' ', $this->col_array[6]->getColValues()) . "\n";
-
-
-
         }
 
         // Converts columns to rows.
@@ -211,7 +210,7 @@
                 return FALSE;
             } else {
                 for ($i = 0 ; $i < count($this->col_values) ; $i++) {
-                    if ($this->col_values[$i] == '.') {
+                    if ($this->col_values[$i] === '.') {
                         $this->col_values[$i] = $player->getPiece();
                         return $i;
                     }
@@ -222,7 +221,6 @@
         public function checkFull() {
             return (($this->col_values[5] !== '.') ? TRUE : FALSE);
         }
-
     }
 
     class player {
