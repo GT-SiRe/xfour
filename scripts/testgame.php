@@ -16,7 +16,6 @@
                $this->col_array[] = new column();
             }
 
-	    //Debug Setup
             $this->setup();
         }
 
@@ -27,7 +26,7 @@
 
             $numPlayers = FALSE;
             while (! $numPlayers) {
-	        $numPlayers  = readline("How many players? (1, 2) ");
+                $numPlayers  = readline("How many players? (1, 2) ");
 
                 if ($numPlayers === '1'){
                     $player_types = array('human','ai');
@@ -44,7 +43,7 @@
 
             $whoGoesFirst = FALSE;
             while (! $whoGoesFirst) {
-		$whoGoesFirst = readline("Current user is player 1. Which player goes first? (1,2) ");
+                $whoGoesFirst = readline("Current user is player 1. Which player goes first? (1,2) ");
                
                 if ($whoGoesFirst === '1') {
                     $player_pieces = array('x', 'o');
@@ -52,30 +51,30 @@
                     $player_pieces = array('o', 'x');
                 } else {
                     echo "Invalid input. Try again.\n";
-                    unset($whoGoesFirst);
+                    $whoGoesFirst = FALSE;
                 }               
-	    }
+            }
 
             if ($numPlayers === 1 || $numPlayers === 0){
-	        $difficulty = FALSE;
+            $difficulty = FALSE;
                 while (! $difficulty) {
                     $difficulty = readline("Enter AI difficulty (Normal, Hard) ");
                  
                     if (! in_array($difficulty, array('Normal','Hard'))){
                         echo "Invalid input. Try again.";
-                        unset($difficulty);
+                        $difficulty = FALSE;
                     }
                 }
             }
 
-	    // Set up the players.
+            // Set up the players.
             $player1 = new player($player_pieces[0], $player_types[0]);
             $player2 = new player($player_pieces[1], $player_types[1]);
 
             $active_player   = ($player1->getPiece() === 'x') ? $player1 : $player2;
             $inactive_player = ($active_player === $player1) ? $player2 : $player1;
 
-	    // The core game loop - players taking turns adding pieces.
+            // The core game loop - players taking turns adding pieces.
             $gameWinner = FALSE;
 
             while (! $gameWinner) {
@@ -83,20 +82,25 @@
                 $this->drawBoard();
 
                 // Active player gets prompted to take a move. 
-//var_dump($active_player);
                 $move = $this->promptMove($active_player);
 
                 // Then the move is executed.
                 $this->addPiece($active_player, $move);
 
-                // Then the win condition is checked.
-                $gameWinner = $this->checkForWin();
-
+                // Then the win condition is checked. Technically this isn't needed until the
+                // 7th move at the earliest, but that's probably an unnecessary optimization. 
+                if ($this->checkForWin($active_player->getPiece())){
+                    $gameWinner = $active_player;
+                }
+              
                 // If the game is not over, the inactive player becomes active and we repeat.
-		$tmp_player      = $active_player;
+                $tmp_player      = $active_player;
                 $active_player   = $inactive_player;
                 $inactive_player = $tmp_player;
-            } 
+            }
+
+            $this->drawBoard();
+            echo "\nPlayer " . $gameWinner->getPiece() . " wins!\n";
         }
 
         // Ask player for their move and process input into game actions.
@@ -105,21 +109,32 @@
             // calcMove function, passing in the difficulty. Moves are returned from the 
             // players as a single character string ('a'-'g') representing a column.
             if ($player->getType() === 'human') {
-                $move_letter = ''; 
-                while (! $move_letter) { 
-                    $move_letter = readline("Input column letter for next move. (a, b, c ... f) ");
+                $move_valid  = '';
+                $move_letter = '';
+                while (!($move_valid) && !($move_letter)) { 
+                    $move_letter = readline("Input column letter for next move. (a, b, c ... g) ");
 
                     if (! in_array($move_letter, array('a','b','c','d','e','f','g'))) {
                         echo "\nInvalid move. Please input a valid column letter.\n"; 
                         $move_letter = '';   
+                    } else {
+                        // Map input to relevant column using ascii chars and 'ord' function.
+                        // Ascii char 'a' is 97; $move_col is 0 for str 'a'
+                        $move_col = ord($move_letter) - 97; 
+                        $move_valid = (! ($this->col_array[$move_col]->checkFull()));
+
+                        if (!($move_valid)){
+                            echo "\nInvalid move. That column is full. Choose another column.\n";
+                            $move_letter = '';
+                        }
                     }
-                }
+                } //end while loop
             } else {
+                  //AI Player case.
 //                $move_letter = player->calcMove(); // TODO
             }
 
-	    // Map input to relevant column use ascii characters and 'ord' function (dep?)
-            $move_col = ord($move_letter) - 97; //Ascii char 'a' is 97; $move_col is 0 for 'a'
+            // Map input to relevant column use ascii characters and 'ord' function (dep?)
 
             // Return mapped input.
             return $move_col;
@@ -128,22 +143,137 @@
         function addPiece($player, $col_num) {
             $outcome = $this->col_array[$col_num]->addPiece($player);
             if (! $outcome) {
-	        return FALSE;
+                return FALSE;
             } else {
                 return TRUE;
             } 
         }
 
-        // A function to see if either player has won the game.
-        function checkForWin() { }
+        /**  A function to see if the active player has won the game. 
+         *
+         *   Technically four sub-checks are needed: Checking across, checking down, and checking
+         *   diagonally up and down. However, it is possible to use the row to col conversion to
+         *   only use two total functions to do all the necessary checks.
+         */
+        function checkForWin($piece) { 
+            //Format column values
+            foreach ($this->col_array AS $column){
+                $values[] = $column->getColValues();
+            }
+
+            // Check 'down'             
+            $check_down    = $this->checkDown($values, $piece);
+
+            // Use the colsToRows function to 'rotate the board', to check 'across'.
+            $check_across  = $this->checkDown($this->colsToRows(), $piece);
+             
+            $check_diag_up   = $this->checkDiagonal($values, $piece);
+
+            $check_diag_down = $this->checkDiagonal($this->colsToRows(),$piece);
+
+	    if ($check_down || $check_across || $check_diag_up || $check_diag_down) {
+
+                return TRUE;
+            }
+        }
+
+        function checkDown($input, $piece) {
+            // Need four in a row to win, but this could be adjusted. But why would you? 
+            // It kind of breaks the design and balance of the game. You monster.
+            $numToWin = 4;
+
+            foreach ($input AS $column) {
+                //Number of times encountered the piece consecutively
+                $count = 0;
+
+                //Traversing through a single 'column'
+                $i = 0; //Start with 'first' column
+                while (($i < count($column)) && (! ((count($column)-1) - $i) < $numToWin - $count)) {
+                //for ($i = 0 ; $i < count($column) ; $i++) {
+                    // As an optimization, if count is less than distance from the 'end' of the col,
+                    // then there can't be 'numToWin' 
+                    if ($column[$i] === $piece) {
+                        $count++;
+                        if ($count === $numToWin) {
+                            return TRUE;
+                        }
+                    } else {
+                        $count = 0;
+                    }
+
+                    ++$i;
+
+                }
+            }
+            
+            return FALSE;
+        }
+
+        function checkDiagonal($input, $piece) {
+            $numToWin = 4;
+            
+            // Traverse diagonally upward keeping track of 'count'.
+
+            // Had some trouble coming up with a good way to handle this. My first instinct
+            // was to use one loop with some kind of way to 'speculate' on points below the 
+            // board and traverse diagonally upwards checking validity until reaching the
+            // board. Instead I decided to use two loops: one travelling downwards from the
+            // 'top' and then one travelling 'rightwards' from the left, checking diagonally
+            // upwards each time. 
+            //
+            // There is almost certainly a more optimal way to do this, but I have yet to
+            // think of any obvious improvments and time is a factor.
+
+            // First half, traversing downwards from highest relevant possible diagonal.
+            $diagonalLength = $numToWin;
+            for ($i = (count($input[0]) - $numToWin) ; $i > -1 ; $i--){
+                $count = 0;
+
+                for ($j = 0 ; $j < $diagonalLength ; $j++) {
+                    if ($input[$j][$i + $j] === $piece) {
+                        $count++;
+                        if ($count === $numToWin) {
+                            return TRUE;
+                        }
+                    } else {
+                        echo $i . "\n"; 
+                        echo $j . "\n\n";
+                        $count = 0;
+                    }          
+                }
+                if (! (($i + $j + 1) > (count($input[0])))) {
+                    ++$diagonalLength;
+                }
+            }
+
+            // Second half, traversing right from second left-most possible lower diagonal.
+            $diagonalLength = $numToWin;
+            for ($j = 1 ; $j < (count($input) - $numToWin) ; $j++){
+                $count = 0;
+
+                for ($i = 0; $i < $diagonalLength ; $i++) {
+                    if ($input[$j][$i+$j] === $piece) {
+                        $count++;
+                        if ($count === $numToWin) {
+                            return TRUE;
+                        }
+                    } else { 
+                        $count = 0;
+                    }
+                }
+            } 
+            if (! (($i + $j + 1) > (count($input)))) {
+                ++$diagonalLength;
+            }
+
+        }
 
         // A function to detect threats (may need some sophistication)
         function detectThreat() { }
 
         //One of the first things I'll implement.
         function drawBoard() {
-            // Break columns out into rows - this should be abstracted away somehow. ??
-
+            // Break columns out into rows
             $rows = $this->colsToRows();
 
             $row_str = array();
@@ -163,8 +293,8 @@
         }
 
         function drawBoardSideways() {
-	    echo "    1 2 3 4 5 6 \n";
-	    echo "  a " . implode(' ', $this->col_array[0]->getColValues()) . "\n";
+            echo "    1 2 3 4 5 6 \n";
+            echo "  a " . implode(' ', $this->col_array[0]->getColValues()) . "\n";
             echo "  b " . implode(' ', $this->col_array[1]->getColValues()) . "\n";
             echo "  c " . implode(' ', $this->col_array[2]->getColValues()) . "\n";
             echo "  d " . implode(' ', $this->col_array[3]->getColValues()) . "\n";
@@ -231,6 +361,7 @@
         }
 
         public function checkFull() {
+            //This is temporarily hard-coded but could be changed.
             return (($this->col_values[5] !== '.') ? TRUE : FALSE);
         }
     }
@@ -244,13 +375,13 @@
             $this->ptype = $type;
         }
 
-	function getPiece(){
-	    return $this->piece;
-	}
+    function getPiece(){
+        return $this->piece;
+    }
 
-	function getType(){
-	    return $this->ptype;
-	}
+    function getType(){
+        return $this->ptype;
+    }
 
     }
 
@@ -259,3 +390,4 @@
     }
 
 ?>
+
