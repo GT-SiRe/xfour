@@ -168,11 +168,9 @@
             $check_across  = $this->checkDown($this->colsToRows(), $piece);
              
             $check_diag_up   = $this->checkDiagonal($values, $piece);
-
-            $check_diag_down = $this->checkDiagonal($this->colsToRows(),$piece);
+            $check_diag_down = $this->checkDiagonal($this->twistCols(),$piece);
 
 	    if ($check_down || $check_across || $check_diag_up || $check_diag_down) {
-
                 return TRUE;
             }
         }
@@ -209,7 +207,11 @@
             return FALSE;
         }
 
-        function checkDiagonal($input, $piece) {
+        function createPlayer($piece, $type) {
+
+        }
+
+        function checkDiagonal($input, $piece, $twist = FALSE) {
             $numToWin = 4;
             
             // Traverse diagonally upward keeping track of 'count'.
@@ -236,10 +238,8 @@
                             return TRUE;
                         }
                     } else {
-                        echo $i . "\n"; 
-                        echo $j . "\n\n";
                         $count = 0;
-                    }          
+                    }      
                 }
                 if (! (($i + $j + 1) > (count($input[0])))) {
                     ++$diagonalLength;
@@ -268,7 +268,9 @@
 
         }
 
-        // A function to detect threats (may need some sophistication)
+
+
+        // A function to detect threats
         function detectThreat() { }
 
         //One of the first things I'll implement.
@@ -319,6 +321,16 @@
             return $rows;
         }
 
+        //  Added this in response to some difficulty with the 'downward diagonal' win detection.
+        function twistCols(){
+            $rows = $this->colsToRows();
+            for ($i = 0 ; $i < count($rows) ; $i++) {  
+                $rows[$i] = array_reverse($rows[$i]);
+            }
+
+            return $rows;
+        }
+
         // A function that takes in a properly formatted string and generates a game in that state.
         function recreateState() { }
 
@@ -363,6 +375,17 @@
         public function checkFull() {
             //This is temporarily hard-coded but could be changed.
             return (($this->col_values[5] !== '.') ? TRUE : FALSE);
+        }
+
+        public function nextRow() {
+            //What row index will next piece dropped in on this column have?
+            for ( $i = 0 ; $i < count($this->col_values) ; $i++ ) {
+                // Check to see if a piece is present. On the first row for which one is not, 
+                // return the index. 
+                if ($this->col_values[$i] === '.') {
+                    return $i;
+                }
+            } 
         }
     }
 
