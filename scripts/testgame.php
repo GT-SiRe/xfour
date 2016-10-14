@@ -167,7 +167,7 @@
             // Use the colsToRows function to 'rotate the board', to check 'across'.
             $check_across  = $this->checkDown($this->colsToRows(), $piece);
              
-            $check_diag_up   = $this->checkDiagonalUp($values, $piece);
+            $check_diag_up   = $this->checkDiagonal($values, $piece);
             $check_diag_down = $this->checkDiagonalDown($values,$piece);
 
 	    if ($check_down || $check_across || $check_diag_up || $check_diag_down) {
@@ -226,7 +226,7 @@
             // There is almost certainly a more optimal way to do this, but I have yet to
             // think of any obvious improvments and time is a factor.
 
-            // First half, traversing downwards from highest relevant possible diagonal.
+            // First half, traversing downwards from highest possible diagonal.
             $diagonalLength = $numToWin;
             for ($i = (count($input[0]) - $numToWin) ; $i > -1 ; $i--){
                 $count = 0;
@@ -271,12 +271,37 @@
         // Basically a similar function to checkDiagonal, but going downards. Decided to just add
         // this as an entirely separate function due to debugging difficulties and time 
         // considerations. Also using this as a prototype for adapting these methods to detecting
-        // threats
-        function checkDiagonalDown($input, $piece, $threatDetect = FALSE) {
+        // threats. On the upside, once you don't have to worry about semi-unpredictable input
+        // anymore, these functions get way easier to code!
+        function checkDiagonalDown($cols, $piece, $threatDetect = FALSE) {
             $numToWin = 4;
 
-            //As in checkDiagonalUp
+            // First half, traversing up from lowest possible lower downward diagonal
             $diagonalLength = $numToWin;
+            for ($j = $numToWin - 1 ; $j < count($cols[0]) -1 ; $j++){
+                $count = 0
+
+                for ($i = 0 ; $i < $diagonalLength ; $i++){
+                    if ($cols[$i][$j - $i]) === $piece){
+                        $count++;
+                        if ($count === $numToWin) {
+                            return TRUE;
+                        } elseif ($threatDetect && $count === $numToWin - 1) {
+                            if (/*check validity of threat and availability of space*/){
+                                return array($i-1, $j-1); //Address of threat
+                            }
+                        }
+                    } else {
+                        $count = 0;
+                    }
+                }
+
+                if (! (($i + $j + 1) > (count($input)))) {
+                    ++$diagonalLength;
+                }
+            }
+
+            // Second half, traversing 'left' from rightmost possible upper downward diagonal
 
 
             }
