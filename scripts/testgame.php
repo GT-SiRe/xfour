@@ -167,8 +167,8 @@
             // Use the colsToRows function to 'rotate the board', to check 'across'.
             $check_across  = $this->checkDown($this->colsToRows(), $piece);
              
-            $check_diag_up   = $this->checkDiagonal($values, $piece);
-            $check_diag_down = $this->checkDiagonal($this->twistCols(),$piece);
+            $check_diag_up   = $this->checkDiagonalUp($values, $piece);
+            $check_diag_down = $this->checkDiagonalDown($values,$piece);
 
 	    if ($check_down || $check_across || $check_diag_up || $check_diag_down) {
                 return TRUE;
@@ -211,7 +211,7 @@
 
         }
 
-        function checkDiagonal($input, $piece, $twist = FALSE) {
+        function checkDiagonalUp($input, $piece, $threatDetect = FALSE) {
             $numToWin = 4;
             
             // Traverse diagonally upward keeping track of 'count'.
@@ -268,7 +268,19 @@
 
         }
 
+        // Basically a similar function to checkDiagonal, but going downards. Decided to just add
+        // this as an entirely separate function due to debugging difficulties and time 
+        // considerations. Also using this as a prototype for adapting these methods to detecting
+        // threats
+        function checkDiagonalDown($input, $piece, $threatDetect = FALSE) {
+            $numToWin = 4;
 
+            //As in checkDiagonalUp
+            $diagonalLength = $numToWin;
+
+
+            }
+        }
 
         // A function to detect threats
         function detectThreat() { }
@@ -316,16 +328,6 @@
                 for ($j = 0 ; $j < count($col) ; $j++) {
                     $rows[$j][] = $col[$j];
                 }
-            }
-
-            return $rows;
-        }
-
-        //  Added this in response to some difficulty with the 'downward diagonal' win detection.
-        function twistCols(){
-            $rows = $this->colsToRows();
-            for ($i = 0 ; $i < count($rows) ; $i++) {  
-                $rows[$i] = array_reverse($rows[$i]);
             }
 
             return $rows;
