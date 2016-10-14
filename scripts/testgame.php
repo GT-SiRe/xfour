@@ -167,7 +167,7 @@
             // Use the colsToRows function to 'rotate the board', to check 'across'.
             $check_across  = $this->checkDown($this->colsToRows(), $piece);
              
-            $check_diag_up   = $this->checkDiagonal($values, $piece);
+            $check_diag_up   = $this->checkDiagonalUp($values, $piece);
             $check_diag_down = $this->checkDiagonalDown($values,$piece);
 
 	    if ($check_down || $check_across || $check_diag_up || $check_diag_down) {
@@ -268,7 +268,8 @@
 
         }
 
-        // Basically a similar function to checkDiagonal, but going downards. Decided to just add
+        // Basically a similar function to checkDiagonal, but going downards. Originally wanted to
+        // use only one diagonal function and manipulate input - in the end had to just add
         // this as an entirely separate function due to debugging difficulties and time 
         // considerations. Also using this as a prototype for adapting these methods to detecting
         // threats. On the upside, once you don't have to worry about semi-unpredictable input
@@ -279,15 +280,15 @@
             // First half, traversing up from lowest possible lower downward diagonal
             $diagonalLength = $numToWin;
             for ($j = $numToWin - 1 ; $j < count($cols[0]) -1 ; $j++){
-                $count = 0
+                $count = 0;
 
                 for ($i = 0 ; $i < $diagonalLength ; $i++){
-                    if ($cols[$i][$j - $i]) === $piece){
+                    if ($cols[$i][$j - $i] === $piece){
                         $count++;
                         if ($count === $numToWin) {
                             return TRUE;
                         } elseif ($threatDetect && $count === $numToWin - 1) {
-                            if (/*check validity of threat and availability of space*/){
+                            if (FALSE){// Check validity of address and whether threat's imminent.
                                 return array($i-1, $j-1); //Address of threat
                             }
                         }
@@ -296,16 +297,43 @@
                     }
                 }
 
-                if (! (($i + $j + 1) > (count($input)))) {
+                if (! (($i + $j + 1) > (count($cols)))) {
                     ++$diagonalLength;
                 }
-            }
+            } // End first half
 
             // Second half, traversing 'left' from rightmost possible upper downward diagonal
+            $diagonalLength = $numToWin;
+            for ($i = $numToWin - 1 ; $i > -1; $i--){
+                $count = 0;
 
+                for ($j = count($cols[0]) - 1 ; $j > ((count($cols[0]) - $diagonalLength) - 1); $j--) {
+                    // Had some brief trouble mentally defining this relationship. This is the
+                    // kind of function that would probably want more thorough documentation.
+	            $i_value = $i + $j - (count($cols[0])-1);
 
-            }
-        }
+                    if($i_value < 0) { echo "i value: $i j value: $j ";}
+
+                    if ($cols[$i_value][$j] === $piece) {
+                        $count++;
+                        if ($count === $numToWin) {
+                            return TRUE;
+                        } elseif ($threatDetect && $count === $numToWin - 1) {
+                            if (FALSE){ // Check validity of address and whether threa's imminent.
+                                return array($i-1, $j-1); //Address of threat
+                            }
+                        }
+    
+                     } else { 
+                         $count = 0;
+                     }
+                }
+//Believe this condition is wrong
+                if (! (($i + $j + 1) > (count($cols[0])))) {
+                    ++$diagonalLength;
+                }
+            } // End second half.
+        } // End checkDiagonalDown
 
         // A function to detect threats
         function detectThreat() { }
