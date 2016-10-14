@@ -8,10 +8,7 @@ The game of connect four is mathematically solved. This project is *not* an effo
 
 ### Known Bugs
 
-There are currently several bugs with the functions used to detect game-winning conditions:
-    -[ ] The upper diagonals do not work.
-    -[ ] Any consecutive winning  sequence on the four right most columns do not win.
-    -[ ]
+There are currently several bugs with the functions used to detect game-winning conditions. The upper diagonals do not work. Any consecutive winning sequence on the four right most columns do not win.
 
 ### AI
 
