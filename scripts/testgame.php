@@ -1,5 +1,6 @@
 <?php
     // TODO - Need to add interface documentation headers to classes and functions.
+    // TODO - Need to break these classes out into separate files. 
     $game = new board();
     
     //A class to describe and represent the full xfour board.
@@ -37,7 +38,7 @@
                     $player_types = array('ai','ai');
                 } else {
                     echo "Invalid number of players selected. Try again.\n";
-                    unset($numPlayers);
+                    $numPlayers = FALSE;
                 }
             }
 
@@ -180,6 +181,8 @@
             // It kind of breaks the design and balance of the game. You monster.
             $numToWin = 4;
 
+            //TODO - While testing, found a bug with detection
+
             foreach ($input AS $column) {
                 //Number of times encountered the piece consecutively
                 $count = 0;
@@ -310,10 +313,12 @@
                 for ($j = count($cols[0]) - 1 ; $j > ((count($cols[0]) - $diagonalLength) - 1); $j--) {
                     // Had some brief trouble mentally defining this relationship. This is the
                     // kind of function that would probably want more thorough documentation.
-	            $i_value = $i + $j - (count($cols[0])-1);
-
-                    if($i_value < 0) { echo "i value: $i j value: $j ";}
-
+	            $i_value = $i - $j + (count($cols[0])-1);
+//$i is the 'starting point' but j defines the traverse. 
+//$j starts as a large number and so must be 'offset'
+//$i_value = $i - $j + (count($cols[0])-1);
+//                    if($i_value < 0) { echo "i value: $i j value: $j ";}
+//if (($i_value === -1) || ($j === -1)){ echo ("i value: $i  j value: $j "); }
                     if ($cols[$i_value][$j] === $piece) {
                         $count++;
                         if ($count === $numToWin) {
@@ -328,9 +333,11 @@
                          $count = 0;
                      }
                 }
-//Believe this condition is wrong
-                if (! (($i + $j + 1) > (count($cols[0])))) {
+                //Believe this condition is wrong
+                //if (! (($i + $j + 1) > (count($cols[0])))) {
+                if ($i === 0) {
                     ++$diagonalLength;
+//if ($diagonalLength > 6) { echo "i value: $i  j value: $j "; }
                 }
             } // End second half.
         } // End checkDiagonalDown
